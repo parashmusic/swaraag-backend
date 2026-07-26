@@ -1,0 +1,47 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments & Secrets
+.env
+.env.*
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Audio uploads & generated temporary files
+uploads/
+temp/
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.m4a
+
+# Audio processing / ML model caches
+.crepe_cache/
+.cache/
+*.pkl
+*.npy
+*.npz
+
+# Logs and databases
+*.log
+*.sqlite
+*.sqlite3
+db.sqlite3
+db.sqlite3-journal
+
+# OS / Editor / IDE
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.pytest_cache/
+.mypy_cache/

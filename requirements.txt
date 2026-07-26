@@ -1,0 +1,16 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2
+librosa>=0.10
+numpy
+scipy
+soundfile
+yt-dlp
+python-multipart      # needed for file upload endpoint
+scikit-learn           # for the supervised raga_matcher upgrade path
+
+# Phase 1: Source separation + better pitch tracking
+torch>=2.0
+torchaudio>=2.0
+demucs                 # HTDemucs vocal/stem separation (Meta)
+torchcrepe             # PyTorch-native CREPE pitch tracking (no TF needed)
