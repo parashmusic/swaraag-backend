@@ -26,8 +26,26 @@ def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-9))
 
 
+def is_time_match(raga_time: str, user_time: str) -> bool:
+    if not raga_time or not user_time or raga_time == "any" or user_time == "any":
+        return False
+    raga_time = raga_time.lower()
+    user_time = user_time.lower()
+    if user_time in raga_time or raga_time in user_time:
+        return True
+    if user_time in ["morning", "dawn", "early_morning"] and raga_time in ["dawn_noon", "early_morning"]:
+        return True
+    if user_time in ["afternoon", "noon"] and raga_time in ["noon_sunset", "dawn_noon"]:
+        return True
+    if user_time in ["evening", "dusk"] and raga_time in ["evening", "noon_sunset"]:
+        return True
+    if user_time in ["night", "midnight", "late_night"] and raga_time in ["night", "late_night", "evening"]:
+        return True
+    return False
+
+
 def match_by_similarity(swara_hist: np.ndarray, top_n: int = 3,
-                         borgeet_mode: bool = False) -> list[dict]:
+                         borgeet_mode: bool = False, time_of_day: str = None) -> list[dict]:
     """
     Unsupervised template match: cosine similarity between the performed
     swara histogram and each raga's ideal (uniform-over-allowed-notes)
@@ -82,15 +100,31 @@ def match_by_similarity(swara_hist: np.ndarray, top_n: int = 3,
                     if shuddha_val > komal_val:
                         conflict_penalty += diff * 1.5
 
-        sim = max(0.0, sim - conflict_penalty)
+        # --- Vivadi (Forbidden Note) Penalty ---
+        # For pentatonic or restricted Borgeet ragas (e.g. Gauri, Mallar omitting Ga/Dha),
+        # if an explicitly forbidden note appears in the performed histogram with significant energy, penalize.
+        vivadi_penalty = 0.0
+        vivadi_notes = template.get("vivadi_notes") or [i for i in range(12) if i not in template_notes]
+        for vivadi_idx in vivadi_notes:
+            vivadi_val = swara_hist[vivadi_idx]
+            if vivadi_val > 0.025:  # Threshold: > 2.5% energy on a forbidden note
+                vivadi_penalty += (vivadi_val - 0.025) * 2.0
+
+        sim = max(0.0, sim - conflict_penalty - vivadi_penalty)
 
         # In borgeet_mode, small boost for Borgeet-origin ragas
         borgeet_boost = 0.03 if (borgeet_mode and template.get("borgeet")) else 0.0
 
+        # Time-of-day raga prior boost
+        time_boost = 0.0
+        if time_of_day and is_time_match(template.get("time_period"), time_of_day):
+            time_boost = 0.05
+
         entry = {
             "raga": template.get("display_name", raga_name),
             "thaat": template.get("thaat", "—"),
-            "similarity": round(sim + borgeet_boost, 4),
+            "time_period": template.get("time_period", "—"),
+            "similarity": round(sim + borgeet_boost + time_boost, 4),
             "notes": template.get("notes", []),
         }
 

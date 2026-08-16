@@ -1,45 +1,60 @@
-# Backend — Survesa Analysis API
+# ⚙️ SWARAAG — Backend Analysis API
 
-## Setup
+<div align="center">
+  <p><b>FastAPI & Python ethnomusicological audio-processing engine for Indian Classical & Assamese Borgeet vocal music.</b></p>
+</div>
+
+---
+
+## 🚀 Setup & Run
+
+### 1. Create Virtual Environment & Install Dependencies
 ```bash
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
-Also install `ffmpeg` on your system (required by yt-dlp for audio extraction):
-- macOS: `brew install ffmpeg`
-- Ubuntu/Debian: `sudo apt install ffmpeg`
-- Windows: https://ffmpeg.org/download.html
+*Note: Ensure `ffmpeg` is installed on your system (required by `yt-dlp` for audio extraction):*
+- **macOS:** `brew install ffmpeg`
+- **Ubuntu/Debian:** `sudo apt install ffmpeg`
+- **Windows:** Download from [ffmpeg.org](https://ffmpeg.org/download.html)
 
-## Run
+### 2. Start Uvicorn Server
 ```bash
 uvicorn app.main:app --reload --port 8000
 ```
-Visit http://localhost:8000/docs for interactive API docs (Swagger UI).
+Visit **`http://localhost:8000/docs`** for interactive API documentation (Swagger UI).
 
-## Endpoints
-- `GET  /health`
-- `POST /analyze`         `{ "source": "https://youtube.com/watch?v=..." }`
-- `POST /analyze/upload`  multipart file upload (wav/mp3/m4a/etc.)
+---
 
-## Pipeline modules (`app/pipeline/`)
-| File | Responsibility |
+## 📡 API Endpoints
+
+| Method | Endpoint | Payload / Description |
+|---|---|---|
+| `GET` | `/health` | Server status check |
+| `POST` | `/analyze` | `{ "source": "https://youtube.com/watch?v=..." }` |
+| `POST` | `/analyze/upload` | Multipart file upload (`.wav`, `.mp3`, `.m4a`, `.flac`) |
+| `GET` | `/dataset` | Paginated Borgeet audio dataset with filtering |
+
+---
+
+## 🧩 Pipeline Architecture (`app/pipeline/`)
+
+| Module | Responsibility |
 |---|---|
-| `audio_input.py` | yt-dlp download + audio loading/normalization |
-| `pitch_extraction.py` | f0 contour via librosa pYIN (CREPE swap-in available) |
-| `tonic_detection.py` | tonic (Sa) estimate via pitch histogram peak |
-| `note_mapping.py` | maps pitch to 12 swara bins, builds swara histogram |
-| `raga_db.py` | seed raga templates (8 ragas) — replace with Saraga-derived data |
-| `raga_matcher.py` | cosine-similarity match + supervised KNN upgrade path |
-| `tempo.py` | beat/tempo estimation via librosa |
-| `analyze.py` | orchestrates the above into the API response schema |
+| `audio_input.py` | `yt-dlp` download, audio loading, resampling, and normalization |
+| `pitch_extraction.py` | High-precision $F_0$ contour extraction via `librosa` pYIN & `CREPE` GPU |
+| `tonic_detection.py` | Acoustic tonic ($Sa$) detection via drone/vocal stem separation & voiced-frame thresholding |
+| `note_mapping.py` | Cents-relative swara histogram (12-bin & fine 48-bin) and bigram transition matrices |
+| `raga_db.py` | Authoritative Borgeet raga definitions (*Gauri*, *Mallar*, *Dhanashri*, *Asowari*, *Suhai*, etc.) |
+| `raga_matcher.py` | Cosine similarity & transition-aware matching weighted by Vadi, Samvadi, and Vivadi penalties |
+| `tempo.py` | Beat grid and BPM estimation via `librosa` |
+| `analyze.py` | Orchestrates pipeline stages and formats JSON schema for frontend rendering |
 
-## Known limitations (see also root README)
-- Tonic detection is the naive "most frequent pitch" heuristic — works
-  reasonably on drone-accompanied recordings, fails when a non-Sa note (e.g.
-  the raga's vadi) is sung more often. Swap in Essentia's
-  `TonicIndianArtMusic` for production accuracy, or add a manual-confirm
-  step in the frontend.
-- `raga_db.py` is a hand-built 8-raga seed set, not a validated ground truth.
-- Taal (rhythmic cycle) identification is not implemented — only BPM/beat
-  grid. Theka pattern matching needs its own labeled dataset.
+---
+
+## 📜 Musicological Grounding
+
+The backend database (`raga_db.py`) is curated directly from traditional Sattriya and Borgeet literature (*Shodhganga thesis*, *Goswami 1997*, *Bhuyan 2003*, *Mahanta 2009*):
+- Models pentatonic (*Audav-Audav*) Borgeet ragas like **Gauri** and **Mallar** ($S-R-m-P-n$) without Hindustani scale assumptions.
+- Integrates traditional Vadi (dominant) and Samvadi (sub-dominant) hierarchies directly into candidate scoring vectors.

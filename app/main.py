@@ -68,6 +68,7 @@ class AnalyzeRequest(BaseModel):
     borgeet_mode: bool = False         # Prioritize Borgeet ragas in matching
     use_separation: bool = True        # Use HTDemucs vocal separation
     tonic_hint: str | None = None      # Optional override for the tonic (e.g., 'D', 'C#')
+    time_of_day: str | None = None     # Optional performance time (e.g., 'morning', 'evening', 'night')
 
 
 class RecalculateRequest(BaseModel):
@@ -189,6 +190,7 @@ def analyze(req: AnalyzeRequest):
             borgeet_mode=req.borgeet_mode,
             use_separation=req.use_separation,
             tonic_hint=req.tonic_hint,
+            time_of_day=req.time_of_day,
         )
         # We need the session_id to save the project. It's stored in the result itself, or we can extract it from stems url.
         # Actually, let's make sure analyze_track returns a session_id in the result!
@@ -216,6 +218,7 @@ async def analyze_upload(
     borgeet_mode: bool = Query(False),
     use_separation: bool = Query(True),
     tonic_hint: str | None = Query(None),
+    time_of_day: str | None = Query(None),
 ):
     """
     Upload an audio file and analyze it.
@@ -233,6 +236,7 @@ async def analyze_upload(
             borgeet_mode=borgeet_mode,
             use_separation=use_separation,
             tonic_hint=tonic_hint,
+            time_of_day=time_of_day,
         )
         
         session_id = result.get("session_id")
@@ -275,6 +279,7 @@ async def analyze_stream(req: AnalyzeRequest):
                 borgeet_mode=req.borgeet_mode,
                 use_separation=req.use_separation,
                 tonic_hint=req.tonic_hint,
+                time_of_day=req.time_of_day,
                 progress_callback=on_progress,
             )
             

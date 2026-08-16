@@ -68,6 +68,7 @@ def analyze_track(source: str, is_youtube: bool = None,
                   borgeet_mode: bool = False,
                   use_separation: bool = True,
                   tonic_hint: str = None,
+                  time_of_day: str = None,
                   progress_callback=None) -> dict:
     """
     Full analysis pipeline.
@@ -213,10 +214,11 @@ def analyze_track(source: str, is_youtube: bool = None,
             
     timings["pitch_extraction"] = round(time.time() - t0, 2)
 
-    # ---- Stage 4: Tonic detection (enhanced) ----
+    # ---- Stage 4: Tonic detection ----
+    # Rule: the most frequently occurring pitch class = Sa.
     _report("detecting_tonic", 65)
     t0 = time.time()
-    
+
     if tonic_hint:
         import re
         note_str = tonic_hint.strip()
@@ -229,117 +231,62 @@ def analyze_track(source: str, is_youtube: bool = None,
                 "tonic_note": librosa.hz_to_note(tonic_hz),
                 "confidence": 1.0,
                 "method": "manual_override",
+                "candidates": [],
             }
             logger.info("Using manual tonic override: %s (%f Hz)", note_str, tonic_hz)
         except Exception as e:
             logger.warning("Invalid tonic hint %s: %s", tonic_hint, e)
             tonic_hint = None  # Fallback to auto-detection
-            
+
     if not tonic_hint:
         tonic_result = estimate_tonic_with_validation(f0_clean, drone_f0_values=drone_f0_clean)
-        
-        # --- Raga-Guided Tonic Selection (Multipitch Evaluation) ---
-        # Evaluate top candidates to see which produces the most musically coherent raga.
-        # NOTE: This step should only *refine*, never *overthrow*, clear acoustic evidence.
-        best_candidate = tonic_result["candidates"][0]
-        best_raga_score = -1
-        best_raga_matches = []
-        best_swara_hist = None
-        
-        # If the acoustic winner already had Sa+Pa harmonic confirmed, we trust it
-        # unconditionally. Overriding proven harmonic evidence with a raga-similarity
-        # score is the #1 cause of wrong tonic detection (e.g., treating Ga as Sa).
-        acoustic_winner = tonic_result["candidates"][0] if tonic_result["candidates"] else None
-        pa_was_confirmed = acoustic_winner and acoustic_winner.get("pa_bonus", 0) > 0
-        
-        logger.info("Evaluating raga matches for top tonic candidates...")
-        for cand in tonic_result["candidates"]:
-            cand_hz = cand["tonic_hz"]
-            cents_rel = cents_relative_to_tonic(f0_clean, cand_hz)
-            hist = build_swara_histogram(cents_rel)
-            matches = match_by_similarity(hist, top_n=1, borgeet_mode=borgeet_mode)
-            
-            if matches:
-                score = matches[0]["similarity"]
-                logger.info("Candidate %s (%.1f Hz): Best match=%s (sim=%.3f)", 
-                            cand["tonic_note"], cand_hz, matches[0]["raga"], score)
-                
-                effective_score = score
-                if cand != tonic_result["candidates"][0]:
-                    effective_score -= 0.05  # Small penalty for non-primary candidates
-                    
-                if effective_score > best_raga_score:
-                    best_raga_score = effective_score
-                    best_candidate = cand
-                    best_raga_matches = matches
-                    best_swara_hist = hist
-
-        # Exhaustive 12-pitch search — ONLY runs if Pa harmonic was NOT confirmed.
-        # If the acoustic Pa was confirmed, the true Sa is already known; searching
-        # other semitones risks confusing a melodic note (Ga, Ma, Pa) for Sa.
-        if pa_was_confirmed:
-            logger.info(
-                "Pa harmonic CONFIRMED for acoustic winner %s — skipping exhaustive search "
-                "to prevent Vadi-as-Sa confusion (e.g., treating C# Ga as Sa in Bhoopali/Scale-A).",
-                acoustic_winner["tonic_note"]
-            )
-        else:
-            logger.info("Pa harmonic NOT confirmed — running exhaustive 12-pitch search as safety net...")
-            base_hz = tonic_result["candidates"][0]["tonic_hz"]
-
-            for i in range(1, 12):
-                cand_hz = base_hz * (2 ** (i / 12.0))
-                # keep in vocal range 100–400 Hz (widened slightly for higher female Sa)
-                while cand_hz > 400: cand_hz /= 2
-                while cand_hz < 100: cand_hz *= 2
-
-                cents_rel = cents_relative_to_tonic(f0_clean, cand_hz)
-                hist = build_swara_histogram(cents_rel)
-                matches = match_by_similarity(hist, top_n=1, borgeet_mode=borgeet_mode)
-
-                if matches:
-                    score = matches[0]["similarity"]
-                    # Require a LARGE margin (12%) to override acoustic evidence.
-                    # A 2% margin was far too permissive and caused Vadi-as-Sa errors.
-                    if score > best_raga_score + 0.12:
-                        logger.info(
-                            "Exhaustive search found better tonic: %s (%.1f Hz), "
-                            "Match=%s (sim=%.3f, margin=+%.3f)",
-                            librosa.hz_to_note(cand_hz), cand_hz,
-                            matches[0]["raga"], score, score - best_raga_score
-                        )
-                        best_raga_score = score
-                        best_candidate = {
-                            "tonic_hz": cand_hz,
-                            "tonic_note": librosa.hz_to_note(cand_hz),
-                            "confidence": 0.75,
-                            "method": "exhaustive_raga_search"
-                        }
-
-        # Update the tonic result only if the raga evaluation genuinely overrode the acoustic winner
-        if best_candidate != tonic_result["candidates"][0]:
-            logger.info("RAGA-GUIDED OVERRIDE: Changed tonic from %s to %s to improve raga match.",
-                        tonic_result["candidates"][0]["tonic_note"], best_candidate["tonic_note"])
-            tonic_result["tonic_hz"] = best_candidate["tonic_hz"]
-            tonic_result["tonic_note"] = best_candidate["tonic_note"]
-            tonic_result["method"] = "raga_guided_override"
-            
         tonic_hz = tonic_result["tonic_hz"]
-        
+
+
     timings["tonic_detection"] = round(time.time() - t0, 2)
+
+
 
     # ---- Stage 5: Swara histogram + raga matching ----
     _report("matching_ragas", 80)
     t0 = time.time()
-    
-    # Re-compute full match for the chosen tonic
+
+    # Build initial swara histogram relative to the detected tonic
     cents_rel_clean = cents_relative_to_tonic(f0_clean, tonic_hz)
     swara_hist = build_swara_histogram(cents_rel_clean)
 
+    # THE RULE: the note that appears most on the swara wheel IS the key (Sa).
+    # Whatever bin is highest in the relative histogram → shift the tonic so
+    # that note lands on bin 0. No conditions, always applied (unless user
+    # gave a manual tonic_hint, in which case we trust them).
+    if not tonic_hint:
+        dominant_bin = int(np.argmax(swara_hist))
+        if dominant_bin != 0:
+            corrected_hz = tonic_hz * (2 ** (dominant_bin / 12.0))
+            # Normalize to vocal octave (80–450 Hz)
+            while corrected_hz < 80:
+                corrected_hz *= 2
+            while corrected_hz > 450:
+                corrected_hz /= 2
+            logger.info(
+                "Tonic shift: %s → %s (swara wheel dominant was %s, bin %d)",
+                librosa.hz_to_note(tonic_hz),
+                librosa.hz_to_note(corrected_hz),
+                ["S","r","R","g","G","m","M","P","d","D","n","N"][dominant_bin],
+                dominant_bin,
+            )
+            tonic_hz = round(float(corrected_hz), 2)
+            tonic_result["tonic_hz"] = tonic_hz
+            tonic_result["tonic_note"] = librosa.hz_to_note(tonic_hz)
+            # Rebuild histogram with corrected tonic
+            cents_rel_clean = cents_relative_to_tonic(f0_clean, tonic_hz)
+            swara_hist = build_swara_histogram(cents_rel_clean)
+
     dom = [{"note": n, "value": v} for n, v in _dominant_notes(swara_hist, top_n=5)]
     scale = _implied_scale(swara_hist)
-    raga_matches = match_by_similarity(swara_hist, top_n=5, borgeet_mode=borgeet_mode)
+    raga_matches = match_by_similarity(swara_hist, top_n=5, borgeet_mode=borgeet_mode, time_of_day=time_of_day)
     timings["raga_matching"] = round(time.time() - t0, 2)
+
 
     # ---- Stage 6: Pitch contour for visualization ----
     voiced_mask = (~np.isnan(f0_all)) & (prob >= 0.5)
@@ -513,60 +460,35 @@ def recalculate_tonic(session_id: str, tonic_hint: str, borgeet_mode: bool) -> d
     else:
         # Re-run auto detection
         tonic_result = estimate_tonic_with_validation(f0_clean, drone_f0_values=drone_f0_clean)
-        
-        # Re-run raga-guided selection
-        best_candidate = tonic_result["candidates"][0]
-        best_raga_score = -1
-        
-        acoustic_winner = tonic_result["candidates"][0] if tonic_result["candidates"] else None
-        pa_was_confirmed = acoustic_winner and acoustic_winner.get("pa_bonus", 0) > 0
-
-        for cand in tonic_result["candidates"]:
-            cand_hz = cand["tonic_hz"]
-            cents_rel = cents_relative_to_tonic(f0_clean, cand_hz)
-            hist = build_swara_histogram(cents_rel)
-            matches = match_by_similarity(hist, top_n=1, borgeet_mode=borgeet_mode)
+        tonic_hz = tonic_result["tonic_hz"]
             
-            if matches:
-                effective_score = matches[0]["similarity"]
-                if cand != tonic_result["candidates"][0]:
-                    effective_score -= 0.05
-                if effective_score > best_raga_score:
-                    best_raga_score = effective_score
-                    best_candidate = cand
-
-        if pa_was_confirmed:
-            logger.info(
-                "Recalc: Pa harmonic confirmed for %s — skipping exhaustive search.",
-                acoustic_winner["tonic_note"]
-            )
-        else:
-            base_hz = tonic_result["candidates"][0]["tonic_hz"]
-            for i in range(1, 12):
-                cand_hz = base_hz * (2 ** (i / 12.0))
-                while cand_hz > 400: cand_hz /= 2
-                while cand_hz < 100: cand_hz *= 2
-                cents_rel = cents_relative_to_tonic(f0_clean, cand_hz)
-                hist = build_swara_histogram(cents_rel)
-                matches = match_by_similarity(hist, top_n=1, borgeet_mode=borgeet_mode)
-                # Require 12% margin to override acoustic evidence (was 2% — too permissive)
-                if matches and matches[0]["similarity"] > best_raga_score + 0.12:
-                    best_raga_score = matches[0]["similarity"]
-                    best_candidate = {
-                        "tonic_hz": cand_hz,
-                        "tonic_note": librosa.hz_to_note(cand_hz),
-                        "confidence": 0.75,
-                        "method": "exhaustive_raga_search"
-                    }
-                
-        if best_candidate != tonic_result["candidates"][0]:
-            tonic_result["tonic_hz"] = best_candidate["tonic_hz"]
-            tonic_result["tonic_note"] = best_candidate["tonic_note"]
-            tonic_result["method"] = "raga_guided_override"
-            
-    tonic_hz = tonic_result["tonic_hz"]
+    # Compute initial swara histogram relative to the detected tonic
     cents_rel_clean = cents_relative_to_tonic(f0_clean, tonic_hz)
     swara_hist = build_swara_histogram(cents_rel_clean)
+
+    # THE RULE: the note that appears most on the swara wheel IS the key (Sa).
+    if not tonic_hint:
+        dominant_bin = int(np.argmax(swara_hist))
+        if dominant_bin != 0:
+            corrected_hz = tonic_hz * (2 ** (dominant_bin / 12.0))
+            # Normalize to vocal octave (80–450 Hz)
+            while corrected_hz < 80:
+                corrected_hz *= 2
+            while corrected_hz > 450:
+                corrected_hz /= 2
+            logger.info(
+                "Recalc Tonic shift: %s → %s (swara wheel dominant was %s, bin %d)",
+                librosa.hz_to_note(tonic_hz),
+                librosa.hz_to_note(corrected_hz),
+                ["S","r","R","g","G","m","M","P","d","D","n","N"][dominant_bin],
+                dominant_bin,
+            )
+            tonic_hz = round(float(corrected_hz), 2)
+            tonic_result["tonic_hz"] = tonic_hz
+            tonic_result["tonic_note"] = librosa.hz_to_note(tonic_hz)
+            # Rebuild histogram with corrected tonic
+            cents_rel_clean = cents_relative_to_tonic(f0_clean, tonic_hz)
+            swara_hist = build_swara_histogram(cents_rel_clean)
     
     dom = [{"note": n, "value": v} for n, v in _dominant_notes(swara_hist, top_n=5)]
     scale = _implied_scale(swara_hist)

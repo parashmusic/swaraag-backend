@@ -23,54 +23,56 @@ until verified against labeled recordings.
 # ---- Standard Hindustani ragas (original seed set) ----
 
 _STANDARD_RAGAS = {
-    "Yaman": {
-        "notes": [0, 2, 4, 6, 7, 9, 11],       # S R G M' P D N (teevra Ma)
-        "vadi": "G", "samvadi": "N",
-        "thaat": "Kalyan",
-        "borgeet": False,
-    },
+    # "Yaman": {
+    #     "notes": [0, 2, 4, 6, 7, 9, 11],       # S R G M' P D N (teevra Ma)
+    #     "vadi": "G", "samvadi": "N",
+    #     "thaat": "Kalyan",
+    #     "time_period": "evening",
+    #     "borgeet": False,
+    # },
     "Bhairav": {
         "notes": [0, 1, 4, 5, 7, 8, 11],       # S r G m P d N
         "vadi": "d", "samvadi": "r",
         "thaat": "Bhairav",
+        "time_period": "early_morning",
         "borgeet": False,
     },
     "Bhupali": {
         "notes": [0, 2, 4, 7, 9],              # S R G P D (pentatonic)
         "vadi": "G", "samvadi": "D",
         "thaat": "Kalyan",
+        "time_period": "night",
         "borgeet": False,
     },
-    # "Kafi": {
-    #     "notes": [0, 2, 3, 5, 7, 9, 10],       # S R g m P D n
-    #     "vadi": "P", "samvadi": "S",
-    #     "thaat": "Kafi",
-    #     "borgeet": False,
-    # },
     "Bhairavi": {
         "notes": [0, 1, 3, 5, 7, 8, 10],       # S r g m P d n (all komal)
         "vadi": "m", "samvadi": "S",
         "thaat": "Bhairavi",
+        "time_period": "early_morning",
         "borgeet": False,
     },
-    "Desh": {
-        "notes": [0, 2, 4, 5, 7, 9, 10, 11],   # S R G m P D n N (mixed nishad)
-        "vadi": "R", "samvadi": "n",
-        "thaat": "Khamaj",
-        "borgeet": False,
-    },
-    "Malkauns": {
-        "notes": [0, 3, 5, 8, 10],             # S g m d n (pentatonic)
-        "vadi": "m", "samvadi": "S",
-        "thaat": "Bhairavi-derived",
-        "borgeet": False,
-    },
-    "Khamaj": {
-        "notes": [0, 2, 4, 5, 7, 9, 10, 11],
-        "vadi": "G", "samvadi": "n",
-        "thaat": "Khamaj",
-        "borgeet": False,
-    },
+    # "Desh": {
+    #     "notes": [0, 2, 4, 5, 7, 9, 10, 11],   # S R G m P D n N (mixed nishad)
+    #     "vadi": "R", "samvadi": "n",
+    #     "thaat": "Khamaj",
+    #     "time_period": "night",
+    #     "borgeet": False,
+    #  },
+    # "Malkauns": {
+    #     "notes": [0, 3, 5, 8, 10],             # S g m d n (pentatonic)
+    #     "vadi": "m", "samvadi": "S",
+    #     "thaat": "Bhairavi-derived",
+    #     "time_period": "night",
+    #     "borgeet": False,
+    # }, 
+    # "Khamaj": {
+    #     "notes": [0, 2, 4, 5, 7, 9, 10, 11],
+    #     "vadi": "G", "samvadi": "n",
+    #     "thaat": "Khamaj",
+    #     "time_period": "night",
+    #     "borgeet": False,
+    # },
+    
 }
 
 # ---- Borgeet-specific ragas ----
@@ -84,6 +86,7 @@ _BORGEET_RAGAS = {
         "notes": [0, 2, 4, 6, 7, 9, 11],       # S R G M P D N (teevra Ma)
         "vadi": "G", "samvadi": "D",
         "thaat": "Kalyan",
+        "time_period": "dawn_noon",
         "borgeet": True,
         "borgeet_category": "bandha",
         "regional": False,
@@ -97,6 +100,7 @@ _BORGEET_RAGAS = {
         "notes": [0, 2, 3, 5, 7, 9, 10],       # S R g m P D n
         "vadi": "P", "samvadi": "g",
         "thaat": "Kafi",
+        "time_period": "noon_sunset",
         "borgeet": True,
         "borgeet_category": "bandha",
         "regional": False,
@@ -110,6 +114,7 @@ _BORGEET_RAGAS = {
         "notes": [0, 2, 5, 7, 10],             # S R m P n (Pentatonic / Audav-Audav omitting Ga and Dha)
         "vadi": "P", "samvadi": "n",
         "thaat": "Kafi / Pentatonic (Sattriya)",
+        "time_period": "dawn_noon",
         "borgeet": True,
         "borgeet_category": "bandha",
         "regional": False,
@@ -123,6 +128,7 @@ _BORGEET_RAGAS = {
         "notes": [0, 1, 4, 5, 7, 9, 10],       # S r G m P D n
         "vadi": "P", "samvadi": "r",
         "thaat": "Marwa-derived / Bhairav",
+        "time_period": "dawn_noon",
         "borgeet": True,
         "borgeet_category": "bandha",
         "regional": False,
@@ -135,6 +141,7 @@ _BORGEET_RAGAS = {
         "notes": [0, 1, 4, 5, 7, 9, 10],       # S r G m P D n
         "vadi": "P", "samvadi": "r",
         "thaat": "Marwa-derived / Bhairav",
+        "time_period": "dawn_noon",
         "borgeet": True,
         "borgeet_category": "bandha",
         "regional": False,
@@ -147,6 +154,7 @@ _BORGEET_RAGAS = {
         "notes": [0, 2, 3, 5, 7, 8, 10],       # S R g m P d n
         "vadi": "P", "samvadi": "R",
         "thaat": "Asavari",
+        "time_period": "evening",
         "borgeet": True,
         "borgeet_category": "bandha",
         "regional": False,
@@ -159,6 +167,7 @@ _BORGEET_RAGAS = {
         "notes": [0, 2, 4, 5, 7, 9, 11],       # S R G m P D N
         "vadi": "m", "samvadi": "S",
         "thaat": "Kalyan-adjacent",
+        "time_period": "noon_sunset",
         "borgeet": True,
         "borgeet_category": "bandha",
         "regional": False,
@@ -170,6 +179,7 @@ _BORGEET_RAGAS = {
         "notes": [0, 2, 3, 5, 7, 9, 10],       # S R g m P D n (Sattriya Janya of Dhanashri / Kafi thaat family)
         "vadi": "R", "samvadi": "P",
         "thaat": "Kafi (Sattriya Janya of Dhanashri)",
+        "time_period": "noon_sunset",
         "borgeet": True,
         "borgeet_category": "mela",
         "regional": False,
@@ -183,6 +193,7 @@ _BORGEET_RAGAS = {
         "notes": [0, 1, 4, 6, 7, 9, 11],       # S r G M P D N
         "vadi": "G", "samvadi": "P",
         "thaat": "Purvi",
+        "time_period": "noon_sunset",
         "borgeet": True,
         "borgeet_category": "bandha",
         "regional": False,
@@ -191,21 +202,23 @@ _BORGEET_RAGAS = {
                        "(Goswami, 1997, p.94), Borgeet Basanta features a characteristic pentatonic ascent omitting Ma/Ni (S-R-G-P-D-S') "
                        "and a weaving descent (D-N-S-N-P-M, G-M-G-M-P-M-G-R) anchored strongly on Gandhar, Pancham, and Sa.",
     },
-    "Turabasanta": {
-        "notes": [0, 1, 4, 6, 7, 8, 11],       # S r G M P d N
-        "vadi": "G", "samvadi": "d",
-        "thaat": "Purvi-adjacent",
-        "borgeet": True,
-        "borgeet_category": "mela",
-        "regional": False,
-        "composers": ["Sankardev"],
-        "description": "A variant of Basanta unique to the Borgeet tradition. "
-                       "Free-rhythm (Mela) performance.",
-    },
+    # "Turabasanta": {
+    #     "notes": [0, 1, 4, 6, 7, 8, 11],       # S r G M P d N
+    #     "vadi": "G", "samvadi": "d",
+    #     "thaat": "Purvi-adjacent",
+    #     "time_period": "noon_sunset",
+    #     "borgeet": True,
+    #     "borgeet_category": "mela",
+    #     "regional": False,
+    #     "composers": ["Sankardev"],
+    #     "description": "A variant of Basanta unique to the Borgeet tradition. "
+    #                    "Free-rhythm (Mela) performance.",
+    # },
     "Puriya Dhanashree": {
         "notes": [0, 1, 4, 6, 7, 8, 11],       # S r G M P d N
         "vadi": "P", "samvadi": "S",
         "thaat": "Purvi",
+        "time_period": "evening",
         "borgeet": False,
         "borgeet_category": None,
         "regional": False,
@@ -216,6 +229,7 @@ _BORGEET_RAGAS = {
         "notes": [0, 2, 3, 5, 7, 8, 10],       # S R g m P d n (Komal Ga, Dha, Ni)
         "vadi": "P", "samvadi": "S",
         "thaat": "Asavari / Bhairavi (Sattriya)",
+        "time_period": "noon_sunset",
         "borgeet": True,
         "borgeet_category": "bandha",
         "regional": False,
@@ -225,24 +239,26 @@ _BORGEET_RAGAS = {
                        "Structured in Jurani, Uroni, and Ghuroni with characteristic phrases like M-P-d-P, M-P-n-P, "
                        "and S-R-M-P-M-g-M-S centered around Pancham and Shadja.",
     },
-    "Nat_Mallar": {
-        "notes": [0, 2, 5, 7, 10],             # S R m P n (Pentatonic / Audav-Audav omitting Ga and Dha)
-        "vadi": "R", "samvadi": "m",
-        "thaat": "Kafi / Pentatonic (Sattriya)",
-        "borgeet": True,
-        "borgeet_category": "bandha",
-        "borgeet_alias": "Mallar",
-        "regional": False,
-        "composers": ["Sankardev"],
-        "description": "A rain/monsoon raga of night/evening. As documented in Borgeet Mukur (Mahanta, 2009, p.194), "
-                       "Sattriya Mallar (Nata-Mallar) is a pentatonic (Audav-Audav) raga using S-R-m-P-n (omitting Ga and Dha "
-                       "entirely, unlike Hindustani Nat Malhar which uses shuddha Ga/Dha). Structured in Juroni, Uroni, "
-                       "and Ghuroni with characteristic meends and phrases like n-S-R~, m~-R, m~-R-m-P~, and P-m-R.",
-    },
+    # "Nat_Mallar": {
+    #     "notes": [0, 2, 5, 7, 10],             # S R m P n (Pentatonic / Audav-Audav omitting Ga and Dha)
+    #     "vadi": "R", "samvadi": "m",
+    #     "thaat": "Kafi / Pentatonic (Sattriya)",
+    #     "time_period": "night",
+    #     "borgeet": True,
+    #     "borgeet_category": "bandha",
+    #     "borgeet_alias": "Mallar",
+    #     "regional": False,
+    #     "composers": ["Sankardev"],
+    #     "description": "A rain/monsoon raga of night/evening. As documented in Borgeet Mukur (Mahanta, 2009, p.194), "
+    #                    "Sattriya Mallar (Nata-Mallar) is a pentatonic (Audav-Audav) raga using S-R-m-P-n (omitting Ga and Dha "
+    #                    "entirely, unlike Hindustani Nat Malhar which uses shuddha Ga/Dha). Structured in Juroni, Uroni, "
+    #                    "and Ghuroni with characteristic meends and phrases like n-S-R~, m~-R, m~-R-m-P~, and P-m-R.",
+    # },
     "Suhai": {
         "notes": [0, 2, 3, 5, 7, 9, 10],       # S R g m P D n (Komal Ga, Komal Ni)
         "vadi": "P", "samvadi": "S",
         "thaat": "Kafi (Sattriya)",
+        "time_period": "night",
         "borgeet": True,
         "borgeet_category": "bandha",
         "regional": False,
@@ -261,6 +277,7 @@ _BORGEET_RAGAS = {
         "notes": None,  # TBD — unique to Sattriya tradition
         "vadi": None, "samvadi": None,
         "thaat": "Regional",
+        "time_period": "noon_sunset",
         "borgeet": True,
         "borgeet_category": "mela",
         "regional": True,
@@ -273,6 +290,7 @@ _BORGEET_RAGAS = {
         "notes": None,  # TBD
         "vadi": None, "samvadi": None,
         "thaat": "Regional",
+        "time_period": "evening",
         "borgeet": True,
         "borgeet_category": "bandha",
         "regional": True,
@@ -284,6 +302,7 @@ _BORGEET_RAGAS = {
         "notes": None,  # TBD
         "vadi": None, "samvadi": None,
         "thaat": "Regional",
+        "time_period": "dawn_noon",
         "borgeet": True,
         "borgeet_category": "mela",
         "regional": True,
@@ -360,14 +379,19 @@ def template_to_vector(template: dict) -> "np.ndarray":
         v[idx] = 1.0
         
     # Weight the Vadi (most important) and Samvadi (second most important) notes heavier.
-    # This embeds the raga's structural hierarchy directly into the cosine similarity calculation,
-    # rewarding performances that emphasize the correct notes.
+    # Phase 1 upgrade: increased Vadi weight to +1.5 and Samvadi to +0.75 for stronger anchoring.
     vadi = template.get("vadi")
     samvadi = template.get("samvadi")
     
     if vadi in SWARA_LABELS:
-        v[SWARA_LABELS.index(vadi)] += 0.5
+        v[SWARA_LABELS.index(vadi)] += 1.5
     if samvadi in SWARA_LABELS:
-        v[SWARA_LABELS.index(samvadi)] += 0.25
+        v[SWARA_LABELS.index(samvadi)] += 0.75
+        
+    # Vivadi (forbidden) notes: zero out any note index explicitly forbidden or not in the allowed scale
+    vivadi_notes = template.get("vivadi_notes") or [i for i in range(12) if i not in notes]
+    for vivadi_idx in vivadi_notes:
+        v[vivadi_idx] = 0.0
         
     return v / (np.linalg.norm(v) + 1e-9)
+
