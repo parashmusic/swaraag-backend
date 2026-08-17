@@ -1,4 +1,4 @@
-# ⚙️ SWARAAG — Backend Analysis API
+# ⚙️ SWARAAG — Backend API
 
 <div align="center">
   <p><b>FastAPI & Python ethnomusicological audio-processing engine for Indian Classical & Assamese Borgeet vocal music.</b></p>
