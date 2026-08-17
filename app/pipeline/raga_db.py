@@ -22,27 +22,14 @@ until verified against labeled recordings.
 
 # ---- Standard Hindustani ragas (original seed set) ----
 
-_STANDARD_RAGAS = {
-    # "Yaman": {
-    #     "notes": [0, 2, 4, 6, 7, 9, 11],       # S R G M' P D N (teevra Ma)
-    #     "vadi": "G", "samvadi": "N",
-    #     "thaat": "Kalyan",
-    #     "time_period": "evening",
-    #     "borgeet": False,
-    # },
+_HINDUSTANI_RAGAS = {
     "Bhairav": {
         "notes": [0, 1, 4, 5, 7, 8, 11],       # S r G m P d N
         "vadi": "d", "samvadi": "r",
         "thaat": "Bhairav",
         "time_period": "early_morning",
         "borgeet": False,
-    },
-    "Bhupali": {
-        "notes": [0, 2, 4, 7, 9],              # S R G P D (pentatonic)
-        "vadi": "G", "samvadi": "D",
-        "thaat": "Kalyan",
-        "time_period": "night",
-        "borgeet": False,
+        "description": "Hindustani Bhairav. Uses Komal Re and Komal Dha.",
     },
     "Bhairavi": {
         "notes": [0, 1, 3, 5, 7, 8, 10],       # S r g m P d n (all komal)
@@ -50,29 +37,64 @@ _STANDARD_RAGAS = {
         "thaat": "Bhairavi",
         "time_period": "early_morning",
         "borgeet": False,
+        "description": "Hindustani Bhairavi. Uses all komal swaras.",
     },
-    # "Desh": {
-    #     "notes": [0, 2, 4, 5, 7, 9, 10, 11],   # S R G m P D n N (mixed nishad)
-    #     "vadi": "R", "samvadi": "n",
-    #     "thaat": "Khamaj",
-    #     "time_period": "night",
-    #     "borgeet": False,
-    #  },
-    # "Malkauns": {
-    #     "notes": [0, 3, 5, 8, 10],             # S g m d n (pentatonic)
-    #     "vadi": "m", "samvadi": "S",
-    #     "thaat": "Bhairavi-derived",
-    #     "time_period": "night",
-    #     "borgeet": False,
-    # }, 
-    # "Khamaj": {
-    #     "notes": [0, 2, 4, 5, 7, 9, 10, 11],
-    #     "vadi": "G", "samvadi": "n",
-    #     "thaat": "Khamaj",
-    #     "time_period": "night",
-    #     "borgeet": False,
-    # },
-    
+    "Dhanashree": {
+        "notes": [0, 2, 3, 5, 7, 8, 10],       # S R g m P d n 
+        "vadi": "P", "samvadi": "S",
+        "thaat": "Asavari",
+        "time_period": "afternoon",
+        "borgeet": False,
+        "description": "Hindustani Dhanashree (Bhimpalasi/Asavari based). Uses Komal Dha, unlike Borgeet Dhanashri which uses Shuddha Dha (Kafi thaat).",
+    },
+    "Asavari": {
+        "notes": [0, 2, 3, 5, 7, 8, 10],       # S R g m P d n
+        "vadi": "d", "samvadi": "g",
+        "thaat": "Asavari",
+        "time_period": "late_morning",
+        "borgeet": False,
+        "description": "Hindustani Asavari. Anchors heavily on Komal Dha and Komal Ga, unlike Borgeet Asowari which anchors on Pa and Re.",
+    },
+    "Shree": {
+        "notes": [0, 1, 4, 6, 7, 8, 11],       # S r G M P d N
+        "vadi": "r", "samvadi": "P",
+        "thaat": "Purvi",
+        "time_period": "sunset",
+        "borgeet": False,
+        "description": "Hindustani Shree. Purvi thaat (Komal Re, Komal Dha, Teevra Ma). Drastically different from Borgeet Sri (Kafi thaat).",
+    },
+    "Gauri": {
+        "notes": [0, 1, 4, 5, 7, 8, 11],       # S r G m P d N
+        "vadi": "r", "samvadi": "P",
+        "thaat": "Bhairav",
+        "time_period": "evening",
+        "borgeet": False,
+        "description": "Hindustani Gauri. Bhairav thaat based, unlike Borgeet Gauri which is pentatonic S R m P n.",
+    },
+    "Basant": {
+        "notes": [0, 1, 4, 5, 6, 7, 8, 11],    # S r G m M P d N (uses both Ma)
+        "vadi": "S", "samvadi": "P",
+        "thaat": "Purvi",
+        "time_period": "spring",
+        "borgeet": False,
+        "description": "Hindustani Basant. Uses both Shuddha Ma and Teevra Ma, and Komal Dha. Borgeet Basanta skips Shuddha Ma.",
+    },
+    "Suha": {
+        "notes": [0, 2, 3, 5, 7, 9, 10],       # S R g m P D n
+        "vadi": "m", "samvadi": "S",
+        "thaat": "Kafi",
+        "time_period": "night",
+        "borgeet": False,
+        "description": "Hindustani Suha. Kanada family.",
+    },
+    "Ahir Bhairav": {
+        "notes": [0, 1, 4, 5, 7, 9, 10],       # S r G m P D n
+        "vadi": "m", "samvadi": "S",
+        "thaat": "Bhairav",
+        "time_period": "morning",
+        "borgeet": False,
+        "description": "Hindustani Ahir Bhairav.",
+    },
 }
 
 # ---- Borgeet-specific ragas ----
@@ -105,10 +127,18 @@ _BORGEET_RAGAS = {
         "borgeet_category": "bandha",
         "regional": False,
         "composers": ["Sankardev", "Madhavdev"],
-        "description": "One of the most frequently used ragas in Borgeet. "
-                       "As documented in Sastriya Sankari Kantha Sangeet (Bhuyan, 2003, p.88), Ga and Ni are flat, "
-                       "with Ga, Ni, and Pa acting as the prominent anchor notes. Structured in four traditional "
-                       "movements (Dhrum, Urran, Sanchar, Ghuran) with signature phrases like P-n-S-g and M-P-M-g-R.",
+        "description": "The most frequently used raga in Borgeet (12 compositions). "
+                       "Borgeet Dhanashri uniquely uses Kafi thaat (Shodhganga p.125), "
+                       "differentiating it from Hindustani Dhanashree (Bhairavi/Asavari thaats).",
+        "transitions": [
+            (7, 10),  # P → n (opening: P-n-S-g)
+            (10, 0),  # n → S
+            (0, 3),   # S → g
+            (3, 5),   # g → m  (Ma Pa Dha Pa Ma phrase)
+            (5, 7),   # m → P
+            (7, 9),   # P → D
+            (2, 3),   # R → g  (Re Ga Re Sa descent)
+        ],
     },
     "Gauri": {
         "notes": [0, 2, 5, 7, 10],             # S R m P n (Pentatonic / Audav-Audav omitting Ga and Dha)
@@ -140,15 +170,24 @@ _BORGEET_RAGAS = {
     "Ahir": {
         "notes": [0, 1, 4, 5, 7, 9, 10],       # S r G m P D n
         "vadi": "P", "samvadi": "r",
-        "thaat": "Marwa-derived / Bhairav",
+        "thaat": "Marwa-derived",
         "time_period": "dawn_noon",
         "borgeet": True,
         "borgeet_category": "bandha",
         "regional": False,
         "composers": ["Sankardev"],
-        "description": "Traditional Assamese name for Ahira / Ahir Bhairav in Borgeet (Goswami, 1997, p.91). Morning raga "
-                       "anchored heavily on Pancham (opening signature P-D-N-D-P) and Rishabh (weaving lower-octave descent "
-                       "G-R-S-n and climb n-S-R-G-M-G-R).",
+        "description": "Also called Ahira in Shodhganga. Often conflated with Hindustani Ahir Bhairav, "
+                       "but Borgeet Ahir uses komal Rishabh and komal Nishad while anchoring heavily on Pancham. "
+                       "Expresses morning awakening.",
+        "transitions": [
+            (7, 9),   # P → D  (opening: Pa - Dha Ni Dha)
+            (9, 11),  # D → N
+            (11, 9),  # N → D
+            (4, 2),   # G → R  (Ga Re Sa Ni descent)
+            (2, 0),   # R → S
+            (0, 11),  # S → N (lower octave: Ni Sa Re)
+            (5, 4),   # m → G (Ma Ga Re approach)
+        ],
     },
     "Asowari": {
         "notes": [0, 2, 3, 5, 7, 8, 10],       # S R g m P d n
@@ -159,9 +198,19 @@ _BORGEET_RAGAS = {
         "borgeet_category": "bandha",
         "regional": False,
         "composers": ["Sankardev", "Madhavdev"],
-        "description": "In the Sattriya and Borgeet tradition, Asowari is characterized by prominent notes Re, Pa, and Dha "
-                       "(unlike Hindustani Asavari which centers on komal dha and komal ga). Structured in traditional "
-                       "movements (Dhrum, Urran, Sanchar, Ghuran) with characteristic leaps like P-S-R and M-P-D.",
+        "description": "An evening raga of deep devotion and plea. The Borgeet tradition "
+                       "anchors Asowari on Pancham (Vadi) and Rishabh (Samvadi), distinct from "
+                       "Hindustani Asavari (Vadi Dha, Samvadi Ga).",
+        "vivadi_notes": [4, 9, 11],  # shuddha G, shuddha D, shuddha N forbidden
+        "transitions": [
+            (7, 0),   # P → S  (opening: Pa - Sa)
+            (0, 2),   # S → R  (Sa - Re - Sa, core phrase)
+            (2, 0),   # R → S
+            (8, 7),   # d → P  (Dha approach to Pa)
+            (5, 7),   # m → P  (Ma Pa Dha Pa Ma)
+            (7, 8),   # P → d
+            (10, 8),  # n → d
+        ],
     },
     "Kedara": {
         "notes": [0, 2, 4, 5, 7, 9, 11],       # S R G m P D N
@@ -198,9 +247,17 @@ _BORGEET_RAGAS = {
         "borgeet_category": "bandha",
         "regional": False,
         "composers": ["Sankardev", "Madhavdev"],
-        "description": "Spring raga with a joyous, celebratory mood. As documented in Bargit : Parampara Aru Parivesan Paddhati "
-                       "(Goswami, 1997, p.94), Borgeet Basanta features a characteristic pentatonic ascent omitting Ma/Ni (S-R-G-P-D-S') "
-                       "and a weaving descent (D-N-S-N-P-M, G-M-G-M-P-M-G-R) anchored strongly on Gandhar, Pancham, and Sa.",
+        "description": "Raga of springtime and joy. Unlike Hindustani Basant (which uses both Mas), "
+                       "Sattriya Basanta is modeled closer to Purvi thaat (Goswami 1997).",
+        "transitions": [
+            (0, 2),   # S → R  (pentatonic ascent: S-R-G-P-D)
+            (2, 4),   # R → G
+            (4, 7),   # G → P  (skip Ma in ascent)
+            (7, 9),   # P → D
+            (9, 7),   # D → P  (descent)
+            (4, 5),   # G → m  (weaving: G-M-G-M-P-M-G-R)
+            (5, 4),   # m → G
+        ],
     },
     # "Turabasanta": {
     #     "notes": [0, 1, 4, 6, 7, 8, 11],       # S r G M P d N
@@ -254,19 +311,19 @@ _BORGEET_RAGAS = {
     #                    "entirely, unlike Hindustani Nat Malhar which uses shuddha Ga/Dha). Structured in Juroni, Uroni, "
     #                    "and Ghuroni with characteristic meends and phrases like n-S-R~, m~-R, m~-R-m-P~, and P-m-R.",
     # },
-    "Suhai": {
-        "notes": [0, 2, 3, 5, 7, 9, 10],       # S R g m P D n (Komal Ga, Komal Ni)
-        "vadi": "P", "samvadi": "S",
-        "thaat": "Kafi (Sattriya)",
-        "time_period": "night",
-        "borgeet": True,
-        "borgeet_category": "bandha",
-        "regional": False,
-        "composers": ["Sankardev"],
-        "description": "Night raga of deep devotion (Shodhganga p.126-127). As documented in Borgeet Mukur (Mahanta, 2009, p.177), "
-                       "Suhai uses Kafi-thaat swaras (komal Ga, komal Ni) with a characteristic ascent leaping from Ga to Pa (skipping Ma) "
-                       "and Dha to upper Sa (skipping Ni). Structured in Juroni, Uroni, and Ghuroni anchored strongly on Pancham.",
-    },
+    # "Suhai": {
+    #     "notes": [0, 2, 3, 5, 7, 9, 10],       # S R g m P D n (Komal Ga, Komal Ni)
+    #     "vadi": "P", "samvadi": "S",
+    #     "thaat": "Kafi (Sattriya)",
+    #     "time_period": "night",
+    #     "borgeet": True,
+    #     "borgeet_category": "bandha",
+    #     "regional": False,
+    #     "composers": ["Sankardev"],
+    #     "description": "Night raga of deep devotion (Shodhganga p.126-127). As documented in Borgeet Mukur (Mahanta, 2009, p.177), "
+    #                    "Suhai uses Kafi-thaat swaras (komal Ga, komal Ni) with a characteristic ascent leaping from Ga to Pa (skipping Ma) "
+    #                    "and Dha to upper Sa (skipping Ni). Structured in Juroni, Uroni, and Ghuroni anchored strongly on Pancham.",
+    # },
 
     # ---- Regional / Unique Sattriya ragas ----
     # These do NOT map directly to standard Hindustani ragas.
@@ -316,7 +373,7 @@ _BORGEET_RAGAS = {
 def get_all_ragas() -> dict:
     """Returns the combined raga database (standard + Borgeet)."""
     combined = {}
-    combined.update(_STANDARD_RAGAS)
+    combined.update(_HINDUSTANI_RAGAS)
     combined.update(_BORGEET_RAGAS)
     return combined
 
@@ -331,32 +388,22 @@ def get_borgeet_ragas() -> dict:
 
 def get_matchable_ragas(borgeet_mode: bool = False) -> dict:
     """
-    Returns ragas that can be used for template matching
-    (i.e., have defined note sets).
+    Returns ragas that can be used for template matching.
 
-    In borgeet_mode, includes Borgeet ragas and uses Borgeet aliases
-    (e.g., shows "Kalyana" instead of "Yaman").
+    In borgeet_mode=True, returns ONLY the authentic Borgeet/Sattriya definitions.
+    In borgeet_mode=False, returns ONLY the Hindustani definitions.
     """
     result = {}
-    all_ragas = get_all_ragas()
+    target_ragas = _BORGEET_RAGAS if borgeet_mode else _HINDUSTANI_RAGAS
 
-    for name, template in all_ragas.items():
+    for name, template in target_ragas.items():
         # Skip ragas with undefined note sets (TBD regional ragas)
         if template.get("notes") is None:
             continue
 
-        # In borgeet_mode, prefer Borgeet names
-        if borgeet_mode and "borgeet_alias" in template:
-            # Create a copy with the Borgeet name
-            alias_name = template["borgeet_alias"]
-            alias_template = dict(template)
-            alias_template["borgeet"] = True
-            alias_template["display_name"] = alias_name
-            result[alias_name] = alias_template
-        else:
-            display_template = dict(template)
-            display_template["display_name"] = name
-            result[name] = display_template
+        display_template = dict(template)
+        display_template["display_name"] = name
+        result[name] = display_template
 
     return result
 

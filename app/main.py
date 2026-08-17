@@ -33,11 +33,13 @@ from typing import Optional
 from .pipeline.analyze import analyze_track
 from .pipeline.raga_db import get_all_ragas
 from . import db
+from .practice_router import router as practice_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Survesa Folk/Raga Analysis API", version="0.2.0")
+app.include_router(practice_router)
 
 # Initialize database on startup
 @app.on_event("startup")

@@ -44,7 +44,7 @@ def is_time_match(raga_time: str, user_time: str) -> bool:
     return False
 
 
-def match_by_similarity(swara_hist: np.ndarray, top_n: int = 3,
+def match_by_similarity(swara_hist: np.ndarray, transition_matrix: np.ndarray = None, top_n: int = 3,
                          borgeet_mode: bool = False, time_of_day: str = None) -> list[dict]:
     """
     Unsupervised template match: cosine similarity between the performed
@@ -111,6 +111,23 @@ def match_by_similarity(swara_hist: np.ndarray, top_n: int = 3,
                 vivadi_penalty += (vivadi_val - 0.025) * 2.0
 
         sim = max(0.0, sim - conflict_penalty - vivadi_penalty)
+
+        # --- Transition Scoring (Phase 2A) ---
+        if transition_matrix is not None and "transitions" in template:
+            template_transitions = template["transitions"]
+            if len(template_transitions) > 0:
+                prob_sum = sum(transition_matrix[i, j] for i, j in template_transitions)
+                # Average probability of the signature bigrams
+                transition_score = prob_sum / len(template_transitions)
+                
+                # transition_score is a probability, usually 0.1 to 0.4.
+                # We scale it to a 0-1 range.
+                normalized_transition = min(1.0, transition_score * 3.0)
+                
+                # Apply as an ADDITIVE BONUS (up to +0.15) rather than a weighted average.
+                # This ensures ragas with transitions don't get artificially deflated
+                # compared to ragas without transitions.
+                sim = min(1.0, sim + (0.15 * normalized_transition))
 
         # In borgeet_mode, small boost for Borgeet-origin ragas
         borgeet_boost = 0.03 if (borgeet_mode and template.get("borgeet")) else 0.0

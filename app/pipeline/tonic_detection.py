@@ -25,14 +25,9 @@ def hz_to_cents(f0_hz: np.ndarray, ref_hz: float = 55.0) -> np.ndarray:
 
 def estimate_tonic_with_validation(f0_values: np.ndarray,
                                    ref_hz: float = 55.0,
-                                   bin_resolution_cents: float = 10.0,
-                                   drone_f0_values: np.ndarray = None) -> dict:
+                                   bin_resolution_cents: float = 10.0) -> dict:
     """
     Detect the tonic (Sa) as the most frequently occurring pitch class.
-
-    If drone F0 values are supplied and have enough voiced content they are
-    preferred over the melody, because the tanpura/harmonium locks onto Sa
-    directly.
 
     Returns
     -------
@@ -45,23 +40,11 @@ def estimate_tonic_with_validation(f0_values: np.ndarray,
     """
     import librosa
 
-    # Prefer drone histogram if we have sufficient voiced frames
-    if (drone_f0_values is not None and
-            len(drone_f0_values) >= max(500, int(len(f0_values) * 0.15))):
-        hist_f0 = drone_f0_values
-        method_base = "drone_peak"
-    else:
-        if drone_f0_values is not None:
-            logger.warning(
-                "Drone stem has too few voiced frames (%d vs melody %d), "
-                "using melody histogram for tonic detection.",
-                len(drone_f0_values), len(f0_values)
-            )
-        hist_f0 = f0_values
-        method_base = "melody_peak"
+    f0_values = f0_values
+    method_base = "melody_peak"
 
     # ---- Build octave-folded pitch-class histogram ----
-    cents = hz_to_cents(hist_f0, ref_hz)
+    cents = hz_to_cents(f0_values, ref_hz)
     folded = np.mod(cents, 1200)                     # fold to 0-1200 cents
 
     n_bins = int(1200 / bin_resolution_cents)        # 120 bins at 10-cent resolution

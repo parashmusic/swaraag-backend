@@ -16,14 +16,13 @@ from urllib.parse import urlparse, parse_qs
 SR = 44100  # target sample rate for all downstream analysis
 
 
-def _parse_start_time(url: str) -> float:
+def _parse_time_param(url: str, param_names: list[str]) -> float:
     """
-    Extract the start-time offset (in seconds) from a YouTube URL.
+    Extract a time offset (in seconds) from a YouTube URL.
 
-    Supports:
+    Supports formats like:
       - ?t=30          -> 30s
-      - ?t=1m30s       -> 90s
-      - ?t=1h2m30s     -> 3750s
+      - ?end=1m30s       -> 90s
       - &start=45      -> 45s
     Returns 0.0 if no timestamp is found.
     """
@@ -34,7 +33,12 @@ def _parse_start_time(url: str) -> float:
     if not qs and parsed.fragment:
         qs = parse_qs(parsed.fragment)
 
-    raw = (qs.get("t") or qs.get("start") or [None])[0]
+    raw = None
+    for param in param_names:
+        if qs.get(param):
+            raw = qs[param][0]
+            break
+            
     if raw is None:
         return 0.0
 
@@ -127,26 +131,37 @@ def get_audio_for_track(source: str, is_youtube: bool = None) -> tuple[np.ndarra
 
     meta = {}
     start_sec = 0.0
+    end_sec = 0.0
 
     if is_youtube:
-        start_sec = _parse_start_time(source)
+        start_sec = _parse_time_param(source, ["t", "start"])
+        end_sec = _parse_time_param(source, ["end"])
         wav_path, meta = download_youtube_audio(source)
+        meta["source_url"] = source
     else:
         wav_path = source
         meta = {
             "title": os.path.basename(source),
             "uploader": "Local File",
             "thumbnail": None,
-            "duration": None
+            "duration": None,
+            "source_url": None
         }
 
     y, sr = load_audio(wav_path)
 
-    # Trim from the requested start time
-    if start_sec > 0:
-        start_sample = int(start_sec * sr)
-        if start_sample < len(y):
-            y = y[start_sample:]
+    # Trim from the requested start and end times
+    start_sample = int(start_sec * sr) if start_sec > 0 else 0
+    end_sample = int(end_sec * sr) if end_sec > 0 else len(y)
+    
+    if end_sample <= start_sample or end_sample > len(y):
+        end_sample = len(y)
+        
+    if start_sample > 0 or end_sample < len(y):
+        y = y[start_sample:end_sample]
+        if start_sample > 0:
             meta["skipped_sec"] = round(start_sec, 1)
+        if end_sample < len(y):
+            meta["trimmed_end_sec"] = round(end_sec, 1)
 
     return y, sr, meta

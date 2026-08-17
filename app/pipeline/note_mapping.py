@@ -55,3 +55,42 @@ def implied_scale(hist: np.ndarray, presence_threshold: float = 0.03) -> list[st
     performed scale (as opposed to passing/ornamental tones).
     """
     return [SWARA_LABELS[i] for i in range(12) if hist[i] >= presence_threshold]
+
+
+def build_transition_matrix(cents_relative: np.ndarray) -> np.ndarray:
+    """
+    Builds a 12x12 bigram transition matrix of note changes.
+    Returns a normalized matrix where M[i][j] is the probability of moving from note i to note j.
+    """
+    diffs = np.abs(cents_relative[:, None] - SWARA_CENTS[None, :])
+    diffs = np.minimum(diffs, 1200 - diffs)
+    nearest = np.argmin(diffs, axis=1)
+
+    # Calculate transitions
+    transitions = np.zeros((12, 12))
+    
+    # We only care about when the note actually changes
+    prev_note = nearest[0]
+    for current_note in nearest[1:]:
+        if current_note != prev_note:
+            transitions[prev_note, current_note] += 1
+            prev_note = current_note
+
+    # Normalize by row (so each row sums to 1)
+    row_sums = transitions.sum(axis=1)
+    # Avoid division by zero
+    transitions[row_sums > 0] = transitions[row_sums > 0] / row_sums[row_sums > 0, np.newaxis]
+    
+    return transitions
+
+
+def extract_alapa_segment(f0_clean: np.ndarray, times: np.ndarray, max_duration=15.0) -> np.ndarray:
+    """
+    Extract the first ~15 seconds as the alapa segment.
+    The alapa in Borgeet is pre-composed and emphasizes Vadi/Samvadi.
+    """
+    mask = times <= max_duration
+    # ensure we don't index out of bounds
+    limit = min(len(f0_clean), np.sum(mask))
+    return f0_clean[:limit]
+

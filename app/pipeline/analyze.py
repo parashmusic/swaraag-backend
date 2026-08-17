@@ -34,7 +34,7 @@ import subprocess
 from .audio_input import get_audio_for_track
 from .pitch_extraction import extract_pitch, clean_pitch_track, HOP_LENGTH
 from .tonic_detection import estimate_tonic_with_validation, cents_relative_to_tonic
-from .note_mapping import build_swara_histogram, dominant_notes as _dominant_notes, implied_scale as _implied_scale
+from .note_mapping import build_swara_histogram, dominant_notes as _dominant_notes, implied_scale as _implied_scale, build_transition_matrix
 from .raga_matcher import match_by_similarity
 from .tempo import estimate_tempo
 
@@ -109,7 +109,6 @@ def analyze_track(source: str, is_youtube: bool = None,
     # ---- Stage 2: Source separation (if available and requested) ----
     separation_used = False
     y_for_pitch = y  # default: use full mix
-    y_for_drone = None # default: no drone stem
     vocals_url = None
     drums_url = None
     bass_url = None
@@ -130,11 +129,6 @@ def analyze_track(source: str, is_youtube: bool = None,
 
             stems = separate_stems(tmp_path)
             y_for_pitch = vocals_to_mono(stems["vocals"])
-            
-            # The harmonium/tanpura drone is typically split between bass and other.
-            # Mixing them gives us the cleanest possible drone signal to extract the true tonic.
-            y_for_drone = vocals_to_mono(stems["bass"] + stems["other"])
-            
             # Save stems as MP3
             stems_dir = out_dir
             
@@ -165,10 +159,6 @@ def analyze_track(source: str, is_youtube: bool = None,
                 y_for_pitch = librosa.resample(
                     y_for_pitch, orig_sr=stems["sample_rate"], target_sr=sr
                 )
-                if y_for_drone is not None:
-                    y_for_drone = librosa.resample(
-                        y_for_drone, orig_sr=stems["sample_rate"], target_sr=sr
-                    )
 
             separation_used = True
             logger.info("Vocal separation successful.")
@@ -196,22 +186,6 @@ def analyze_track(source: str, is_youtube: bool = None,
     f0_clean = clean_pitch_track(pitch, prob_threshold=0.5)
     if len(f0_clean) < 50:
         raise ValueError("Not enough voiced pitch content detected — check audio quality/input.")
-        
-    # Extract pitch for drone (if available)
-    drone_f0_clean = None
-    if y_for_drone is not None:
-        logger.info("Extracting drone pitch from separated stems...")
-        drone_pitch = extract_pitch(y_for_drone, sr)
-        # Use a slightly lower threshold for the drone as it's often more diffuse
-        drone_f0_clean = clean_pitch_track(drone_pitch, prob_threshold=0.3)
-        # Require significant voiced content in drone (at least 500 frames AND 15% of melody voiced frames)
-        if len(drone_f0_clean) < max(500, int(len(f0_clean) * 0.15)):
-            logger.warning(
-                "Drone pitch extraction found too little voiced content (%d frames vs %d vocal frames), ignoring drone.",
-                len(drone_f0_clean), len(f0_clean)
-            )
-            drone_f0_clean = None
-            
     timings["pitch_extraction"] = round(time.time() - t0, 2)
 
     # ---- Stage 4: Tonic detection ----
@@ -239,7 +213,7 @@ def analyze_track(source: str, is_youtube: bool = None,
             tonic_hint = None  # Fallback to auto-detection
 
     if not tonic_hint:
-        tonic_result = estimate_tonic_with_validation(f0_clean, drone_f0_values=drone_f0_clean)
+        tonic_result = estimate_tonic_with_validation(f0_clean)
         tonic_hz = tonic_result["tonic_hz"]
 
 
@@ -282,9 +256,12 @@ def analyze_track(source: str, is_youtube: bool = None,
             cents_rel_clean = cents_relative_to_tonic(f0_clean, tonic_hz)
             swara_hist = build_swara_histogram(cents_rel_clean)
 
+    # Phase 2A: Build bigram transition matrix
+    trans_matrix = build_transition_matrix(cents_rel_clean)
+
     dom = [{"note": n, "value": v} for n, v in _dominant_notes(swara_hist, top_n=5)]
     scale = _implied_scale(swara_hist)
-    raga_matches = match_by_similarity(swara_hist, top_n=5, borgeet_mode=borgeet_mode, time_of_day=time_of_day)
+    raga_matches = match_by_similarity(swara_hist, transition_matrix=trans_matrix, top_n=5, borgeet_mode=borgeet_mode, time_of_day=time_of_day)
     timings["raga_matching"] = round(time.time() - t0, 2)
 
 
@@ -385,8 +362,6 @@ def analyze_track(source: str, is_youtube: bool = None,
         np.save(os.path.join(out_dir, "f0_all.npy"), f0_all)
         np.save(os.path.join(out_dir, "prob.npy"), prob)
         np.save(os.path.join(out_dir, "times.npy"), times)
-        if drone_f0_clean is not None:
-            np.save(os.path.join(out_dir, "drone_f0_clean.npy"), drone_f0_clean)
     except Exception as e:
         logger.warning(f"Could not save pitch arrays for recalculation: {e}")
 
@@ -439,13 +414,10 @@ def recalculate_tonic(session_id: str, tonic_hint: str, borgeet_mode: bool) -> d
     prob = np.load(os.path.join(out_dir, "prob.npy"))
     times = np.load(os.path.join(out_dir, "times.npy"))
     
-    drone_path = os.path.join(out_dir, "drone_f0_clean.npy")
-    drone_f0_clean = np.load(drone_path) if os.path.exists(drone_path) else None
-    
     pitch = {"f0": f0_all, "voiced_prob": prob, "times": times}
     f0_clean = clean_pitch_track(pitch, prob_threshold=0.5)
     
-    if tonic_hint and tonic_hint != "none":
+    if tonic_hint:
         import re
         note_str = tonic_hint.strip()
         if not re.search(r'\d$', note_str):
@@ -459,7 +431,7 @@ def recalculate_tonic(session_id: str, tonic_hint: str, borgeet_mode: bool) -> d
         }
     else:
         # Re-run auto detection
-        tonic_result = estimate_tonic_with_validation(f0_clean, drone_f0_values=drone_f0_clean)
+        tonic_result = estimate_tonic_with_validation(f0_clean)
         tonic_hz = tonic_result["tonic_hz"]
             
     # Compute initial swara histogram relative to the detected tonic
@@ -490,9 +462,12 @@ def recalculate_tonic(session_id: str, tonic_hint: str, borgeet_mode: bool) -> d
             cents_rel_clean = cents_relative_to_tonic(f0_clean, tonic_hz)
             swara_hist = build_swara_histogram(cents_rel_clean)
     
+    # Phase 2A: Build bigram transition matrix
+    trans_matrix = build_transition_matrix(cents_rel_clean)
+
     dom = [{"note": n, "value": v} for n, v in _dominant_notes(swara_hist, top_n=5)]
     scale = _implied_scale(swara_hist)
-    raga_matches = match_by_similarity(swara_hist, top_n=5, borgeet_mode=borgeet_mode)
+    raga_matches = match_by_similarity(swara_hist, transition_matrix=trans_matrix, top_n=5, borgeet_mode=borgeet_mode)
     
     voiced_mask = (~np.isnan(f0_all)) & (prob >= 0.5)
     contour_cents = 1200 * np.log2(f0_all[voiced_mask] / tonic_hz)
